@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 变更 v1.3.0: 增加 subtle divider -->
+    <title>多平台信息搜索 (v1.3.0)</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <style>
+        /* 自定义字体，Inter 非常接近 Apple 的 San Francisco 字体 */
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'Microsoft Yahei', sans-serif;
+        }
+
+        /* v1.1.0: Apple 风格的按钮 */
+        .search-btn {
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f5f9; /* bg-slate-100 */
+            border-radius: 1rem; /* rounded-xl */
+        }
+        .search-btn:hover {
+            transform: translateY(-2px);
+            background-color: #e2e8f0; /* bg-slate-200 */
+        }
+
+        /* v1.1.0: "磨砂玻璃" 卡片 */
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.6); /* bg-white/60 */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.08);
+        }
+
+        /* v1.1.1: 浅蓝色渐变背景 */
+        body {
+            background: linear-gradient(to bottom right, #e0f2fe, #f8fafc); /* sky-100 to slate-50 */
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+
+        /* 变更 v1.2.0: 隐藏高级搜索框的过渡效果 */
+        #advancedSearchContainer {
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        #advancedSearchContainer.open {
+            max-height: 100px; /* 给予足够的高度 */
+            opacity: 1;
+            margin-top: 1rem; /* 16px */
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-center items-center min-h-screen p-4 md:p-8">
+
+    <div class="glass-card w-full max-w-4xl p-10 md:p-12 rounded-3xl">
+        
+        <!-- 标题 -->
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-extrabold text-gray-800">多平台信息搜索</h1>
+            <p class="inline-block px-4 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full mt-4">
+                Multi-platform Search
+            </p>
+        </div>
+
+        <!-- 搜索输入框 -->
+        <!-- 变更 v1.2.4: 调整了 mb-8 -> mb-4 -->
+        <div class="relative mb-4">
+            <!-- 变更 v1.2.8: 更新 placeholder -->
+            <input type="text" id="searchInput" class="w-full px-6 py-5 text-xl text-gray-800 bg-white/60 border border-gray-200/50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400" placeholder="研究自己感兴趣的内容…">
+            
+            <!-- 变更 v1.2.4: 将高级搜索开关移入搜索框右侧 -->
+            <div class="absolute inset-y-0 right-0 flex items-center pr-4">
+                <!-- 新增: 高级搜索切换按钮 -->
+                <button id="toggleAdvancedSearchBtn" class="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" title="高级站内搜索 (仅限Google)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 0h-3.375M10.5 12h9.75M10.5 12a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 0h-3.375M10.5 18h9.75M10.5 18a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 0h-3.375" />
+                    </svg>
+                </button>
+                <!-- 搜索图标 -->
+                <svg class="w-6 h-6 text-gray-400 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div>
+        
+        <!-- 
+          变更 v1.2.4: 
+          1. 移除了 v1.2.3 的 text-center 切换链接
+          2. 将 mb-12 移到这个容器上
+        -->
+        <div class="mb-12">
+            <!-- 隐藏的输入框容器 (v1.2.0) -->
+            <div id="advancedSearchContainer">
+                <!-- 变更 v1.2.7: 更新 placeholder -->
+                <input type="text" id="siteSearchInput" class="w-full px-5 py-3 text-base text-gray-700 bg-white/70 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" placeholder="在此输入其他网站的名字…">
+            </div>
+        </div>
+
+        <!-- 变更 v1.3.0: 拆分为两个网格 -->
+        
+        <!-- 平台搜索按钮网格 (第1排: 国际) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
+            
+            <!-- Google -->
+            <button id="searchGoogle" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=google.com" alt="Google Icon">
+                <span class="text-base font-medium text-gray-700">Google</span>
+            </button>
+            
+            <!-- Reddit -->
+            <button id="searchReddit" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=reddit.com" alt="Reddit Icon">
+                <span class="text-base font-medium text-gray-700">Reddit</span>
+            </button>
+
+            <!-- X (Twitter) -->
+            <button id="searchX" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=x.com" alt="X Icon">
+                <span class="text-base font-medium text-gray-700">X</span>
+            </button>
+
+            <!-- YouTube -->
+            <button id="searchYouTube" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=youtube.com" alt="YouTube Icon">
+                <span class="text-base font-medium text-gray-700">YouTube</span>
+            </button>
+        </div>
+
+        <!-- 变更 v1.3.0: 新增的微妙分割线 -->
+        <div class="my-5 border-t border-gray-900/10"></div>
+
+        <!-- 平台搜索按钮网格 (第2排: 国内) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
+            <!-- Douyin (抖音) -->
+            <button id="searchDouyin" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=douyin.com" alt="Douyin Icon">
+                <span class="text-base font-medium text-gray-700">抖音</span>
+            </button>
+
+            <!-- Xiaohongshu (小红书) -->
+            <button id="searchXiaohongshu" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://icon.horse/icon/xiaohongshu.com" alt="Xiaohongshu Icon">
+                <span class="text-base font-medium text-gray-700">小红书</span>
+            </button>
+
+            <!-- Zhihu (知乎) -->
+            <button id="searchZhihu" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=zhihu.com" alt="Zhihu Icon">
+                <span class="text-base font-medium text-gray-700">知乎</span>
+            </button>
+
+            <!-- V2EX -->
+            <button id="searchV2ex" class="search-btn p-4">
+                <img class="w-6 h-6 mr-3 rounded-md" src="https://www.google.com/s2/favicons?sz=64&domain=v2ex.com" alt="V2EX Icon">
+                <span class="text-base font-medium text-gray-700">V2EX</span>
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const searchInput = document.getElementById('searchInput');
+        const searchXButton = document.getElementById('searchX');
+        const searchYouTubeButton = document.getElementById('searchYouTube');
+        const searchDouyinButton = document.getElementById('searchDouyin');
+        const searchXiaohongshuButton = document.getElementById('searchXiaohongshu');
+        const searchZhihuButton = document.getElementById('searchZhihu');
+        const searchGoogleButton = document.getElementById('searchGoogle');
+        const searchRedditButton = document.getElementById('searchReddit');
+        const searchV2exButton = document.getElementById('searchV2ex');
+        
+        // 变更 v1.2.4: 切换按钮的 ID 已更改
+        const toggleAdvancedSearchBtn = document.getElementById('toggleAdvancedSearchBtn');
+        const advancedSearchContainer = document.getElementById('advancedSearchContainer');
+        const siteSearchInput = document.getElementById('siteSearchInput');
+
+        /**
+         * 执行搜索的通用函数
+         * @param {string} baseUrl - 搜索的基础URL
+         * @param {string} query - 搜索查询词
+         */
+        function performSearch(baseUrl, query) {
+            if (!query) {
+                searchInput.value = ''; // 清空以显示placeholder
+                searchInput.placeholder = "请输入搜索内容！";
+                searchInput.classList.add('animate-shake');
+                setTimeout(() => {
+                    searchInput.classList.remove('animate-shake');
+                    // 变更 v1.2.8: 更新重置后的 placeholder
+                    searchInput.placeholder = "研究自己感兴趣的内容…";
+                }, 1000);
+                return;
+            } else {
+                // 变更 v1.2.8: 更新重置后的 placeholder
+                searchInput.placeholder = "研究自己感兴趣的内容…";
+            }
+            const encodedQuery = encodeURIComponent(query);
+            const searchUrl = baseUrl + encodedQuery;
+            
+            window.open(searchUrl, '_blank');
+        }
+
+        /**
+         * 获取输入框的查询词
+         * @returns {string} - 去除首尾空格的查询词
+         */
+        function getQuery() {
+            return searchInput.value.trim();
+        }
+        
+        // --- 增加一个简单的 CSS 动画 (用于空搜索提示) ---
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+            .animate-shake {
+                animation: shake 0.3s ease-in-out;
+            }
+        `;
+        document.head.appendChild(style);
+
+
+        // --- 为每个按钮添加事件监听器 ---
+
+        searchXButton.addEventListener('click', () => {
+            const baseUrl = 'https://x.com/search?q=';
+            performSearch(baseUrl, getQuery());
+        });
+
+        searchYouTubeButton.addEventListener('click', () => {
+            const baseUrl = 'https://www.youtube.com/results?search_query=';
+            performSearch(baseUrl, getQuery());
+        });
+
+        searchDouyinButton.addEventListener('click', () => {
+            const baseUrl = 'https://www.douyin.com/search/';
+            performSearch(baseUrl, getQuery());
+        });
+
+        searchXiaohongshuButton.addEventListener('click', () => {
+            const baseUrl = 'https://www.xiaohongshu.com/search_result?keyword=';
+            performSearch(baseUrl, getQuery());
+        });
+
+        searchZhihuButton.addEventListener('click', () => { 
+            const baseUrl = 'https://www.zhihu.com/search?q=';
+            performSearch(baseUrl, getQuery());
+        });
+
+        // 变更 v1.2.0: 修改 Google 按钮逻辑
+        searchGoogleButton.addEventListener('click', () => {
+            const query = getQuery();
+            if (!query) {
+                performSearch(null, null); // 触发空搜索提示
+                return;
+            }
+
+            const sitesQuery = siteSearchInput.value.trim();
+            let finalSearchQuery = query;
+
+            if (sitesQuery) {
+                // 如果高级搜索框有内容
+                const sites = sitesQuery.split(' ').filter(Boolean); // 按空格分割, 过滤空字符串
+                if (sites.length > 0) {
+                    
+                    // 变更 v1.2.4: 自动添加 .com
+                    const siteClauses = sites.map(site => {
+                        let siteName = site.trim();
+                        // 检查是否不包含 '.' (即不是一个完整域名)
+                        if (!siteName.includes('.')) {
+                            // 自动添加 .com
+                            siteName = siteName + '.com';
+                        }
+                        return `site:${siteName}`;
+                    });
+
+                    // 构建查询: "keyword (site:a.com OR site:b.com)"
+                    finalSearchQuery = `${query} (${siteClauses.join(' OR ')})`;
+                }
+            }
+            
+            // 基础URL
+            const baseUrl = 'https://www.google.com/search?q=';
+            // performSearch 会自动编码, Google 会正确处理编码后的 () OR
+            performSearch(baseUrl, finalSearchQuery);
+        });
+
+        // S...
+        searchRedditButton.addEventListener('click', () => {
+            const baseUrl = 'https://www.reddit.com/search/?q=';
+            performSearch(baseUrl, getQuery());
+        });
+        
+        // 搜索 V2EX
+        searchV2exButton.addEventListener('click', () => {
+            // 变更 v1.2.0: 确保此按钮不受高级搜索框影响
+            const query = getQuery();
+            if (!query) {
+                performSearch(null, null); // 调用空函数以触发提示
+                return;
+            }
+            const siteSearchQuery = `site:v2ex.com ${query}`;
+            const baseUrl = 'https://www.google.com/search?q=';
+            performSearch(baseUrl, siteSearchQuery);
+        });
+        
+        // 变更 v1.2.4: 切换按钮的事件监听器已更新
+        toggleAdvancedSearchBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // 阻止按钮的默认行为
+            const isOpen = advancedSearchContainer.classList.toggle('open');
+            if (isOpen) {
+                siteSearchInput.focus();
+                // 也可以给按钮本身一个 "active" 状态, 比如改变颜色
+                toggleAdvancedSearchBtn.classList.add('text-blue-600');
+            } else {
+                toggleAdvancedSearchBtn.classList.remove('text-blue-600');
+            }
+        });
+
+        // --- 允许按回车键触发默认搜索 (改为Google) ---
+        searchInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                searchGoogleButton.click();
+            }
+        });
+
+    </script>
+
+</body>
+</html>
